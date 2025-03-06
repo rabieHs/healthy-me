@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "51766395888",
+    "project_id": "healthyme-4b7e0",
+    "storage_bucket": "healthyme-4b7e0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:51766395888:android:d5ed014c76e195136ed335",
+        "android_client_info": {
+          "package_name": "com.example.flutter_applicatione"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDxfFlB9QCkg-uCpOy8cAa0x88j7arF4IA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
