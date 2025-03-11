@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/material.dart';
 import 'profile_tab.dart';
 import 'meetings_tab.dart';
+import 'patients_tab.dart';
 
 class SpecialistHomeScreen extends StatefulWidget {
   const SpecialistHomeScreen({Key? key}) : super(key: key);
@@ -17,6 +18,7 @@ class _SpecialistHomeScreenState extends State<SpecialistHomeScreen> {
   static const List<Widget> _widgetOptions = <Widget>[
     ProfileTab(),
     MeetingsTab(),
+    PatientsTab(),
   ];
 
   void _onItemTapped(int index) {
@@ -38,6 +40,10 @@ class _SpecialistHomeScreenState extends State<SpecialistHomeScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.calendar_today),
             label: 'Meetings',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.people),
+            label: 'Patients',
           ),
         ],
         currentIndex: _selectedIndex,

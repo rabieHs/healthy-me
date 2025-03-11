@@ -9,6 +9,7 @@ class Appointment {
   String? status;
   String? meetingUrl;
   String? report;
+  String? resume;
 
   Appointment({
     String? id,
@@ -19,6 +20,7 @@ class Appointment {
     this.status,
     this.meetingUrl = '',
     this.report,
+    this.resume,
   }) : id = id ?? Uuid().v4(); // Generate UUID if id is not provided
 
   factory Appointment.fromMap(Map<String, dynamic> map) {
@@ -44,6 +46,7 @@ class Appointment {
       'status': status,
       'meeting_url': meetingUrl,
       'report': report,
+      'resume': resume,
     };
   }
 }

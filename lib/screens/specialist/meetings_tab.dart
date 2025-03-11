@@ -179,6 +179,7 @@ class _MeetingsTabState extends State<MeetingsTab> {
 
   void _showReportDialog(BuildContext context, Appointment meeting) {
     TextEditingController reportController = TextEditingController();
+    TextEditingController resumeController = TextEditingController();
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -188,6 +189,15 @@ class _MeetingsTabState extends State<MeetingsTab> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
+                const SizedBox(height: 20),
+                TextField(
+                  controller: resumeController,
+                  maxLines: 3,
+                  decoration: const InputDecoration(
+                    hintText: 'Enter meeting resume',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
                 const SizedBox(height: 20),
                 TextField(
                   controller: reportController,
@@ -211,11 +221,13 @@ class _MeetingsTabState extends State<MeetingsTab> {
               child: const Text('Complete Meeting'),
               onPressed: () async {
                 String report = reportController.text;
-                if (report.isNotEmpty) {
+                String resume = resumeController.text;
+                if (report.isNotEmpty && resume.isNotEmpty) {
                   await _firestoreService.updateMeetingStatusAndReport(
                     meeting.id!,
                     'Completed',
                     report,
+                    resume,
                   );
                   // ignore: use_build_context_synchronously
                   Navigator.of(context).pop();
@@ -226,7 +238,7 @@ class _MeetingsTabState extends State<MeetingsTab> {
                   // ignore: use_build_context_synchronously
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Report cannot be empty.'),
+                      content: Text('Report and resume cannot be empty.'),
                       duration: Duration(seconds: 2),
                     ),
                   );

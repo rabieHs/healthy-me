@@ -164,11 +164,12 @@ class FirestoreService {
 
   // Update Meeting Status and Report
   Future<void> updateMeetingStatusAndReport(
-      String meetingId, String status, String report) async {
+      String meetingId, String status, String report, String? resume) async {
     try {
       await _firestore.collection('meetings').doc(meetingId).update({
         'status': status,
         'report': report,
+        'resume': resume,
       });
     } catch (e) {
       print("Error updating meeting status and report: $e");
@@ -185,6 +186,15 @@ class FirestoreService {
       });
     } catch (e) {
       print("Error updating meeting status and meeting URL: $e");
+    }
+  }
+
+  // Create User in Firestore after Google Sign Up
+  Future<void> createUser(AppUser user) async {
+    try {
+      await _firestore.collection('users').doc(user.uid).set(user.toMap());
+    } catch (e) {
+      print("Error creating user: $e");
     }
   }
 }
