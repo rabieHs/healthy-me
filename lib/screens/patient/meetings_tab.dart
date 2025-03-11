@@ -3,6 +3,7 @@ import '../../services/firestore_service.dart';
 import '../../models/appoitment.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../models/user_model.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class MeetingsTab extends StatefulWidget {
   const MeetingsTab({Key? key}) : super(key: key);
@@ -46,9 +47,9 @@ class _MeetingsTabState extends State<MeetingsTab> {
                       context: context,
                       builder: (context) {
                         return AlertDialog(
-                          title: Text("Meeting report"),
+                          title: Text("Meeting resume"),
                           content:
-                              Text(meeting.report ?? 'No report available.'),
+                              Text(meeting.resume ?? 'No resume available.'),
                         );
                       });
                 },
@@ -85,7 +86,27 @@ class _MeetingsTabState extends State<MeetingsTab> {
                         Text('Date: ${meeting.date}'),
                         Text('Time: ${meeting.time}'),
                         Text('Status: ${meeting.status}'),
-                        // Display meeting details
+                        const SizedBox(height: 8),
+                        meeting.meetingUrl != null &&
+                                meeting.meetingUrl!.isNotEmpty
+                            ? GestureDetector(
+                                onTap: () async {
+                                  print("Meeting link: ${meeting.meetingUrl}");
+                                  if (meeting.meetingUrl != null) {
+                                    Uri url = Uri.parse(meeting.meetingUrl!);
+                                    if (await canLaunchUrl(url)) {
+                                      await launchUrl(url);
+                                    } else {
+                                      throw 'Could not launch ${meeting.meetingUrl}';
+                                    }
+                                  }
+                                },
+                                child: Text(
+                                  'Meeting Link',
+                                  style: TextStyle(color: Colors.blue),
+                                ),
+                              )
+                            : Container(),
                       ],
                     ),
                   ),

@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import '../models/appoitment.dart';
 import '../models/user_model.dart';
 
@@ -121,14 +122,37 @@ class FirestoreService {
   }
 
   // Add Meeting
-  Future<void> addMeeting(Appointment meeting) async {
+  Future<bool> addMeeting(Appointment meeting, BuildContext conntext) async {
+    List<Appointment> _userMeetings =
+        await getPatientMeetings(meeting.patientId!);
+
+    DateTime meetingDate = DateTime.parse(meeting.date!);
+    final _acceptedMeetings =
+        _userMeetings.where((meet) => meet.status == "Accepted");
+
+    for (var userMeeting in _acceptedMeetings) {
+      DateTime date = DateTime.parse(userMeeting.date!);
+
+      if (date.day == meetingDate.day &&
+          date.month == meetingDate.month &&
+          date.year == meetingDate.year &&
+          date.hour == meetingDate.hour) {
+        ScaffoldMessenger.of(conntext).showSnackBar(
+          const SnackBar(
+            content: Text('You already have a meeting at this time.'),
+          ),
+        );
+        return false;
+      }
+    }
     try {
       await _firestore
           .collection('meetings')
           .doc(meeting.id)
           .set(meeting.toMap());
+      return true;
     } catch (e) {
-      print("Error adding meeting: $e");
+      return false;
     }
   }
 

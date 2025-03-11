@@ -47,12 +47,15 @@ class _PatientsTabState extends State<PatientsTab> {
     }
     setState(() {
       _patients = patients;
+      _originalPAtients = patients;
       _meetings = meetings;
     });
   }
 
   List<AppUser> _patients = [];
+  List<AppUser> _originalPAtients = [];
   List<Appointment> _meetings = [];
+  String search = "";
 
   @override
   Widget build(BuildContext context) {
@@ -60,59 +63,86 @@ class _PatientsTabState extends State<PatientsTab> {
       appBar: AppBar(
         title: const Text('Patients'),
       ),
-      body: _patients.isEmpty
-          ? const Center(child: Text('No patients found.'))
-          : ListView.builder(
-              itemCount: _patients.length,
-              itemBuilder: (context, index) {
-                final patient = _patients[index];
-                if (patient == null) {
-                  return const ListTile(
-                    title: Text('Error: Patient data is null'),
-                  );
-                }
-                return Card(
-                  elevation: 4.0,
-                  margin: const EdgeInsets.symmetric(
-                      horizontal: 10.0, vertical: 6.0),
-                  child: Container(
-                    decoration: const BoxDecoration(
-                        color: Color.fromRGBO(64, 75, 96, .9)),
-                    child: ListTile(
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 20.0, vertical: 10.0),
-                        leading: Container(
-                          padding: const EdgeInsets.only(right: 12.0),
-                          decoration: const BoxDecoration(
-                              border: Border(
-                                  right: BorderSide(
-                                      width: 1.0, color: Colors.white24))),
-                          child: const Icon(Icons.person, color: Colors.white),
-                        ),
-                        title: Text(
-                          patient.name!,
-                          style: const TextStyle(
-                              color: Colors.white, fontSize: 18),
-                        ),
-                        subtitle: Text(patient.email ?? '',
-                            style: const TextStyle(
-                                color: Colors.white70, fontSize: 16)),
-                        trailing: const Icon(Icons.arrow_forward,
-                            color: Colors.white),
-                        onTap: () {
-                          // Navigate to patient details page
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => PatientDetailsPage(
-                                  patient: patient, meetings: _meetings),
-                            ),
-                          );
-                        }),
-                  ),
-                );
+      body: Padding(
+        padding: const EdgeInsets.all(15),
+        child: Column(
+          children: [
+            TextField(
+              decoration: InputDecoration(labelText: "search"),
+              onChanged: (value) {
+                print(value);
+                setState(() {
+                  if (value.isNotEmpty) {
+                    _patients = _originalPAtients
+                        .where((patient) => patient.name!.startsWith(value))
+                        .toList();
+                  } else {
+                    _patients = _originalPAtients;
+                  }
+                });
               },
             ),
+            SizedBox(
+              height: 15,
+            ),
+            _patients.isEmpty
+                ? const Center(child: Text('No patients found.'))
+                : ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: _patients.length,
+                    itemBuilder: (context, index) {
+                      final patient = _patients[index];
+                      if (patient == null) {
+                        return const ListTile(
+                          title: Text('Error: Patient data is null'),
+                        );
+                      }
+                      return Card(
+                        elevation: 4.0,
+                        margin: const EdgeInsets.symmetric(vertical: 6.0),
+                        child: Container(
+                          decoration: const BoxDecoration(
+                              color: Color.fromRGBO(64, 75, 96, .9)),
+                          child: ListTile(
+                              contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 20.0, vertical: 10.0),
+                              leading: Container(
+                                padding: const EdgeInsets.only(right: 12.0),
+                                decoration: const BoxDecoration(
+                                    border: Border(
+                                        right: BorderSide(
+                                            width: 1.0,
+                                            color: Colors.white24))),
+                                child: const Icon(Icons.person,
+                                    color: Colors.white),
+                              ),
+                              title: Text(
+                                patient.name!,
+                                style: const TextStyle(
+                                    color: Colors.white, fontSize: 18),
+                              ),
+                              subtitle: Text(patient.email ?? '',
+                                  style: const TextStyle(
+                                      color: Colors.white70, fontSize: 16)),
+                              trailing: const Icon(Icons.arrow_forward,
+                                  color: Colors.white),
+                              onTap: () {
+                                // Navigate to patient details page
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => PatientDetailsPage(
+                                        patient: patient, meetings: _meetings),
+                                  ),
+                                );
+                              }),
+                        ),
+                      );
+                    },
+                  ),
+          ],
+        ),
+      ),
     );
   }
 }

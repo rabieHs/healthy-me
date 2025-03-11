@@ -125,30 +125,33 @@ class _SpecialistListTabState extends State<SpecialistListTab> {
                         );
 
                         // Add meeting to Firestore
-                        _firestoreService.addMeeting(appointment);
+                        final success = await _firestoreService.addMeeting(
+                            appointment, context);
 
                         // Show confirmation dialog
                         // ignore: use_build_context_synchronously
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return AlertDialog(
-                              title: const Text('Appointment Booked'),
-                              content: const Text(
-                                  'Your appointment has been booked successfully.'),
-                              actions: <Widget>[
-                                TextButton(
-                                  child: const Text('OK'),
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                    Navigator.of(context)
-                                        .pop(); // Close booking dialog
-                                  },
-                                ),
-                              ],
-                            );
-                          },
-                        );
+                        if (success) {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: const Text('Appointment Booked'),
+                                content: const Text(
+                                    'Your appointment has been booked successfully.'),
+                                actions: <Widget>[
+                                  TextButton(
+                                    child: const Text('OK'),
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                      Navigator.of(context)
+                                          .pop(); // Close booking dialog
+                                    },
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        }
                       }
                     }
                   }
