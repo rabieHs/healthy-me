@@ -3,6 +3,9 @@ import '../../services/firestore_service.dart';
 import '../../models/appoitment.dart';
 import '../../models/user_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../services/analyse_serices.dart'; // Import AnalyseServices
+import 'package:intl/intl.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class MeetingsTab extends StatefulWidget {
   const MeetingsTab({Key? key}) : super(key: key);
@@ -13,6 +16,8 @@ class MeetingsTab extends StatefulWidget {
 
 class _MeetingsTabState extends State<MeetingsTab> {
   final FirestoreService _firestoreService = FirestoreService();
+  final AnalyseServices _analyseServices =
+      AnalyseServices(); // Initialize AnalyseServices
   List<Appointment> _meetings = [];
 
   @override
@@ -40,70 +45,120 @@ class _MeetingsTabState extends State<MeetingsTab> {
             itemCount: _meetings.length,
             itemBuilder: (context, index) {
               final meeting = _meetings[index];
-              return GestureDetector(
-                onTap: meeting.status == 'Accepted'
-                    ? () {
-                        _showReportDialog(context, meeting);
+              return FutureBuilder<DocumentSnapshot?>(
+                // FutureBuilder to fetch test result
+                future:
+                    _analyseServices.getLatestTestResult(meeting.patientId!),
+                builder: (context, testSnapshot) {
+                  String testType = 'N/A';
+                  String testMood = 'N/A';
+                  String testDate = 'N/A';
+
+                  if (testSnapshot.connectionState == ConnectionState.done) {
+                    if (testSnapshot.hasData && testSnapshot.data != null) {
+                      final testData =
+                          testSnapshot.data!.data() as Map<String, dynamic>?;
+                      print("testData: $testData");
+                      if (testData != null) {
+                        testType = testData['type'] as String? ?? 'N/A';
+                        testMood = testData['mood'] as String? ?? 'N/A';
+                        Timestamp timestamp =
+                            testData['date'] as Timestamp? ?? Timestamp.now();
+                        DateTime dateTime = timestamp.toDate();
+                        testDate =
+                            DateFormat('yyyy-MM-dd HH:mm:ss').format(dateTime);
                       }
-                    : null,
-                child: Card(
-                  margin: const EdgeInsets.all(8.0),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        FutureBuilder<AppUser?>(
-                          future: _firestoreService.getUser(meeting.patientId!),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState ==
-                                ConnectionState.waiting) {
-                              return const CircularProgressIndicator();
-                            }
-                            if (snapshot.hasError) {
-                              return Text('Error: ${snapshot.error}');
-                            }
-                            if (!snapshot.hasData || snapshot.data == null) {
-                              return const Text('Patient Name: N/A');
-                            }
-                            final patient = snapshot.data!;
-                            return Text(
-                              'Meeting with ${patient.name ?? 'N/A'}',
-                              style: const TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.bold),
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 8),
-                        Text('Date: ${meeting.date}'),
-                        Text('Time: ${meeting.time}'),
-                        Text('Status: ${meeting.status}'),
-                        meeting.status == "Pending"
-                            ? Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: <Widget>[
-                                  ElevatedButton(
-                                    onPressed: () {
-                                      _updateMeetingStatus(
-                                          meeting.id, 'Accepted');
-                                    },
-                                    child: const Text('Accept'),
+                    }
+                  }
+
+                  return GestureDetector(
+                    onTap: meeting.status == 'Accepted'
+                        ? () {
+                            _showReportDialog(context, meeting);
+                          }
+                        : null,
+                    child: Card(
+                      margin: const EdgeInsets.all(8.0),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            FutureBuilder<AppUser?>(
+                              future:
+                                  _firestoreService.getUser(meeting.patientId!),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return const CircularProgressIndicator();
+                                }
+                                if (snapshot.hasError) {
+                                  return Text('Error: ${snapshot.error}');
+                                }
+                                if (!snapshot.hasData ||
+                                    snapshot.data == null) {
+                                  return const Text('Patient Name: N/A');
+                                }
+                                final patient = snapshot.data!;
+                                return Text(
+                                  'Meeting with ${patient.name ?? 'N/A'}',
+                                  style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold),
+                                );
+                              },
+                            ),
+                            const SizedBox(height: 8),
+                            Text('Date: ${meeting.date}'),
+                            Text('Time: ${meeting.time}'),
+                            Text('Status: ${meeting.status}'),
+                            Text('Type: $testType'),
+                            Text('Mood: $testMood'),
+                            Text('Test Date: $testDate'),
+                            if (meeting.status ==
+                                "Accepted") // Conditionally display test result if meeting is accepted
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const SizedBox(height: 8),
+                                  const Text(
+                                    'Latest Test Result:',
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
                                   ),
-                                  const SizedBox(width: 8),
-                                  ElevatedButton(
-                                    onPressed: () {
-                                      _updateMeetingStatus(
-                                          meeting.id, 'Rejected');
-                                    },
-                                    child: const Text('Reject'),
-                                  ),
+                                  Text('Type: $testType'),
+                                  Text('Mood: $testMood'),
+                                  Text('Date: $testDate'),
                                 ],
-                              )
-                            : Text(""),
-                      ],
+                              ),
+                            meeting.status == "Pending"
+                                ? Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: <Widget>[
+                                      ElevatedButton(
+                                        onPressed: () {
+                                          _updateMeetingStatus(
+                                              meeting.id, 'Accepted');
+                                        },
+                                        child: const Text('Accept'),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      ElevatedButton(
+                                        onPressed: () {
+                                          _updateMeetingStatus(
+                                              meeting.id, 'Rejected');
+                                        },
+                                        child: const Text('Reject'),
+                                      ),
+                                    ],
+                                  )
+                                : const Text(""),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
-                ),
+                  );
+                },
               );
             },
           );

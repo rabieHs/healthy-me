@@ -228,7 +228,7 @@ class PatientDetailsPage extends StatelessWidget {
                             'Report',
                             style: TextStyle(color: Colors.white, fontSize: 18),
                           ),
-                          subtitle: const Text('No report yet',
+                          subtitle: Text(meeting.report ?? 'No report yet',
                               style: TextStyle(
                                   color: Colors.white70, fontSize: 16)),
                         ),

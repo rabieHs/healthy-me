@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../models/appoitment.dart';
 import 'package:uuid/uuid.dart';
 import '../../models/user_model.dart';
+import 'meetings_tab.dart';
 
 class SpecialistListTab extends StatefulWidget {
   const SpecialistListTab({Key? key}) : super(key: key);
@@ -35,41 +36,59 @@ class _SpecialistListTabState extends State<SpecialistListTab> {
 
   @override
   Widget build(BuildContext context) {
-    return _specialists.isEmpty
-        ? const Center(child: CircularProgressIndicator())
-        : ListView.builder(
-            itemCount: _specialists.length,
-            itemBuilder: (context, index) {
-              final specialist = _specialists[index];
-              return Card(
-                margin: const EdgeInsets.all(8.0),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(
-                        specialist.name ?? 'N/A',
-                        style: const TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 8),
-                      Text('Specialty: ${specialist.specialty ?? 'N/A'}'),
-                      Text(
-                          'Availability: ${specialist.availability?.join(', ') ?? 'N/A'}'),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: () {
-                          _showBookingDialog(context, specialist);
-                        },
-                        child: const Text('Book Appointment'),
-                      ),
-                    ],
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Consult Specialists'),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15),
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) {
+                  return const MeetingsTab();
+                }));
+              },
+              child: Icon(Icons.history),
+            ),
+          )
+        ],
+      ),
+      body: _specialists.isEmpty
+          ? const Center(child: CircularProgressIndicator())
+          : ListView.builder(
+              itemCount: _specialists.length,
+              itemBuilder: (context, index) {
+                final specialist = _specialists[index];
+                return Card(
+                  margin: const EdgeInsets.all(8.0),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          specialist.name ?? 'N/A',
+                          style: const TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 8),
+                        Text('Specialty: ${specialist.specialty ?? 'N/A'}'),
+                        Text(
+                            'Availability: ${specialist.availability?.join(', ') ?? 'N/A'}'),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () {
+                            _showBookingDialog(context, specialist);
+                          },
+                          child: const Text('Book Appointment'),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              );
-            },
-          );
+                );
+              },
+            ),
+    );
   }
 
   void _showBookingDialog(BuildContext context, AppUser specialist) {

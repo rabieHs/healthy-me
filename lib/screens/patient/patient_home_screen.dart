@@ -1,10 +1,13 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_applicatione/screens/patient/feed.dart';
 import 'profile_tab.dart';
 import 'specialist_list_tab.dart';
 import 'meetings_tab.dart';
+import 'activities_tab.dart';
 
 class PatientHomeScreen extends StatefulWidget {
-  const PatientHomeScreen({Key? key}) : super(key: key);
+  const PatientHomeScreen({super.key});
 
   @override
   _PatientHomeScreenState createState() => _PatientHomeScreenState();
@@ -14,9 +17,10 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
   int _selectedIndex = 0;
 
   static const List<Widget> _widgetOptions = <Widget>[
-    ProfileTab(),
+    FeedScreen(),
     SpecialistListTab(),
-    MeetingsTab(),
+    ActivitiesTab(), // Added ActivitiesTab here
+    ProfileTab(),
   ];
 
   void _onItemTapped(int index) {
@@ -28,21 +32,25 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Patient Home')),
       body: Center(
         child: _widgetOptions.elementAt(_selectedIndex),
       ),
       bottomNavigationBar: BottomNavigationBar(
+        unselectedItemColor: Colors.grey,
         items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
           BottomNavigationBarItem(
-            icon: Icon(Icons.list),
+            icon: Icon(CupertinoIcons.home), //icon for specialists
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(CupertinoIcons.heart_fill), //icon for specialists
             label: 'Specialists',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today),
-            label: 'Meetings',
+            icon: Icon(Icons.local_activity), //icon for activities
+            label: 'Activities',
           ),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.amber[800],

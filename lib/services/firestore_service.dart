@@ -221,4 +221,23 @@ class FirestoreService {
       print("Error creating user: $e");
     }
   }
+
+  // Save Test Result
+  Future<void> saveTestResult({
+    required String userId,
+    required String testType,
+    required DateTime dateTime,
+    required int result,
+  }) async {
+    try {
+      await _firestore.collection('test_saves').doc().set({
+        'userId': userId,
+        'testType': testType,
+        'dateTime': dateTime,
+        'result': result,
+      });
+    } catch (e) {
+      print("Error saving test result: $e");
+    }
+  }
 }

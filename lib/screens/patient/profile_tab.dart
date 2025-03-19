@@ -33,55 +33,55 @@ class _ProfileTabState extends State<ProfileTab> {
 
   @override
   Widget build(BuildContext context) {
-    return _currentUser == null
-        ? const Center(child: CircularProgressIndicator())
-        : Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                const Text(
-                  'Profile Information',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 20),
-                ListTile(
-                  leading: const Icon(Icons.person),
-                  title: Text(_currentUser!.name ?? 'N/A'),
-                  subtitle: const Text('Name'),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.email),
-                  title: Text(_currentUser!.email ?? 'N/A'),
-                  subtitle: const Text('Email'),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.phone),
-                  title: Text(_currentUser!.phone ?? 'N/A'),
-                  subtitle: const Text('Phone'),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.location_on),
-                  title: Text(_currentUser!.address ?? 'N/A'),
-                  subtitle: const Text('Address'),
-                ),
-                const Spacer(),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      await FirebaseAuth.instance.signOut();
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => WelcomeScreen()),
-                      );
-                    },
-                    child: const Text('Logout'),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Profile'),
+      ),
+      body: _currentUser == null
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  ListTile(
+                    leading: const Icon(Icons.person),
+                    title: Text(_currentUser!.name ?? 'N/A'),
+                    subtitle: const Text('Name'),
                   ),
-                ),
-              ],
+                  ListTile(
+                    leading: const Icon(Icons.email),
+                    title: Text(_currentUser!.email ?? 'N/A'),
+                    subtitle: const Text('Email'),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.phone),
+                    title: Text(_currentUser!.phone ?? 'N/A'),
+                    subtitle: const Text('Phone'),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.location_on),
+                    title: Text(_currentUser!.address ?? 'N/A'),
+                    subtitle: const Text('Address'),
+                  ),
+                  const Spacer(),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        await FirebaseAuth.instance.signOut();
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => WelcomeScreen()),
+                        );
+                      },
+                      child: const Text('Logout'),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          );
+    );
   }
 }
