@@ -16,9 +16,9 @@ class _SpecialistHomeScreenState extends State<SpecialistHomeScreen> {
   int _selectedIndex = 0;
 
   static const List<Widget> _widgetOptions = <Widget>[
-    ProfileTab(),
     MeetingsTab(),
     PatientsTab(),
+    ProfileTab(),
   ];
 
   void _onItemTapped(int index) {
@@ -36,7 +36,6 @@ class _SpecialistHomeScreenState extends State<SpecialistHomeScreen> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
           BottomNavigationBarItem(
             icon: Icon(Icons.calendar_today),
             label: 'Meetings',
@@ -45,6 +44,7 @@ class _SpecialistHomeScreenState extends State<SpecialistHomeScreen> {
             icon: Icon(Icons.people),
             label: 'Patients',
           ),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.amber[800],

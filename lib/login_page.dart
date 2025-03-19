@@ -61,7 +61,9 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-      final googleSignIn = GoogleSignIn();
+      final googleSignIn = GoogleSignIn(
+          clientId:
+              "51766395888-s6rcp4jma2vba6tf07b3f9v24tb9ntm6.apps.googleusercontent.com");
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
       if (googleUser == null) {
         setState(() {

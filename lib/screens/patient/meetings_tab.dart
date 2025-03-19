@@ -51,9 +51,9 @@ class _MeetingsTabState extends State<MeetingsTab> {
                         context: context,
                         builder: (context) {
                           return AlertDialog(
-                            title: Text("Meeting resume"),
+                            title: Text("Meeting Report"),
                             content:
-                                Text(meeting.resume ?? 'No resume available.'),
+                                Text(meeting.resume ?? 'No report available.'),
                           );
                         });
                   },
