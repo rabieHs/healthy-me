@@ -14,11 +14,54 @@ class ProfileTab extends StatefulWidget {
 class _ProfileTabState extends State<ProfileTab> {
   final FirestoreService _firestoreService = FirestoreService();
   AppUser? _currentUser;
+  final _nameController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _loadCurrentUser();
+  }
+
+  void _showUpdateNameDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        _nameController.text = _currentUser?.name ?? '';
+        return AlertDialog(
+          title: const Text('Update Name'),
+          content: TextField(
+            controller: _nameController,
+            decoration: const InputDecoration(hintText: 'Enter new name'),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            ElevatedButton(
+              child: const Text('Update'),
+              onPressed: () {
+                _updateUserName(_nameController.text);
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _updateUserName(String newName) async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      await _firestoreService.updateUser(
+        uid: user.uid,
+        name: newName,
+      );
+      _loadCurrentUser(); // Reload user data to reflect changes
+    }
   }
 
   _loadCurrentUser() async {
@@ -43,10 +86,15 @@ class _ProfileTabState extends State<ProfileTab> {
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 20),
-                ListTile(
-                  leading: const Icon(Icons.person),
-                  title: Text(_currentUser!.name ?? 'N/A'),
-                  subtitle: const Text('Name'),
+                GestureDetector(
+                  onTap: () {
+                    _showUpdateNameDialog(context);
+                  },
+                  child: ListTile(
+                    leading: const Icon(Icons.person),
+                    title: Text(_currentUser!.name ?? 'N/A'),
+                    subtitle: const Text('Name'),
+                  ),
                 ),
                 ListTile(
                   leading: const Icon(Icons.email),

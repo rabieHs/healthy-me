@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../models/appoitment.dart';
 import '../models/user_model.dart';
 
@@ -46,6 +47,29 @@ class FirestoreService {
     } catch (e) {
       print("Error during registration: $e");
       return null;
+    }
+  }
+
+  // Update User
+  Future<void> updateUser({
+    required String uid,
+    String? name,
+    String? phone,
+    String? specialty,
+    String? bio,
+  }) async {
+    try {
+      Map<String, dynamic> updates = {};
+      if (name != null) updates['name'] = name;
+      if (phone != null) updates['phone'] = phone;
+      if (specialty != null) updates['specialty'] = specialty;
+      if (bio != null) updates['bio'] = bio;
+
+      if (updates.isNotEmpty) {
+        await _firestore.collection('users').doc(uid).update(updates);
+      }
+    } catch (e) {
+      print("Error updating user: $e");
     }
   }
 
@@ -200,16 +224,35 @@ class FirestoreService {
     }
   }
 
-  // Update Meeting Status and Meeting URL
-  Future<void> updateMeetingStatusAndMeetingUrl(
-      String meetingId, String status, String meetingUrl) async {
+  // Update Meeting Status and Meeting URL (Keep existing one if needed elsewhere, or remove if redundant)
+  // Future<void> updateMeetingStatusAndMeetingUrl(String meetingId, String status,
+  //     String meetingUrl, DateTime meetingDateTime) async {
+  //   try {
+  //     await _firestore.collection('meetings').doc(meetingId).update({
+  //       'status': status,
+  //       'meeting_url': meetingUrl,
+  //       'date': DateFormat('yyyy-MM-dd').format(meetingDateTime),
+  //       'time': DateFormat('HH:mm').format(meetingDateTime),
+  //     });
+  //   } catch (e) {
+  //     print("Error updating meeting status and meeting URL: $e");
+  //   }
+  // }
+
+  // NEW: Update Meeting Details (Status, URL, Date, Time)
+  Future<void> updateMeetingDetails(String meetingId, String status,
+      String meetingUrl, String date, String time) async {
     try {
       await _firestore.collection('meetings').doc(meetingId).update({
         'status': status,
         'meeting_url': meetingUrl,
+        'date': date, // Already formatted string
+        'time': time, // Already formatted string
       });
     } catch (e) {
-      print("Error updating meeting status and meeting URL: $e");
+      print("Error updating meeting details: $e");
+      // Re-throw the error so the calling function can handle it (e.g., show a SnackBar)
+      throw e;
     }
   }
 
@@ -238,6 +281,21 @@ class FirestoreService {
       });
     } catch (e) {
       print("Error saving test result: $e");
+    }
+  }
+
+  // Update Meeting Date and Time
+  Future<void> updateMeetingDateTime(
+      String meetingId, String formattedDateTime) async {
+    try {
+      DateTime dateTime =
+          DateFormat('yyyy-MM-dd HH:mm:ss').parse(formattedDateTime);
+      await _firestore.collection('meetings').doc(meetingId).update({
+        'date': DateFormat('yyyy-MM-dd').format(dateTime),
+        'time': DateFormat('HH:mm').format(dateTime),
+      });
+    } catch (e) {
+      print("Error updating meeting date and time: $e");
     }
   }
 }

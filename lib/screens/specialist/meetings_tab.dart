@@ -6,6 +6,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/analyse_serices.dart'; // Import AnalyseServices
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart'; // Ensure Material is imported
+import '../../services/firestore_service.dart';
+import '../../models/appoitment.dart';
+import '../../models/user_model.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../../services/analyse_serices.dart'; // Import AnalyseServices
+import 'package:intl/intl.dart';
 
 class MeetingsTab extends StatefulWidget {
   const MeetingsTab({Key? key}) : super(key: key);
@@ -164,20 +171,161 @@ class _MeetingsTabState extends State<MeetingsTab> {
           );
   }
 
+  // Helper function for URL validation
+  bool _isValidUrl(String url) {
+    // Simple regex for basic URL validation (you might want a more robust one)
+    final RegExp urlRegExp = RegExp(
+        r"^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$",
+        caseSensitive: false,
+        multiLine: false);
+    return urlRegExp.hasMatch(url);
+  }
+
   Future<void> _updateMeetingStatus(String? meetingId, String status) async {
-    if (meetingId != null) {
-      if (status == 'Accepted') {
-        TextEditingController meetingUrlController = TextEditingController();
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
+    if (meetingId == null) return;
+
+    if (status == 'Accepted') {
+      _showEnterUrlDialog(meetingId, status);
+    } else {
+      // Handle rejection directly
+      try {
+        await _firestoreService.updateMeetingStatus(meetingId, status);
+        _loadMeetings(); // Refresh list
+      } catch (e) {
+        print('Error updating meeting status to Rejected: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error rejecting meeting: $e')),
+        );
+      }
+    }
+  }
+
+  void _showEnterUrlDialog(String meetingId, String status) {
+    final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+    final TextEditingController meetingUrlController = TextEditingController();
+
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Prevent closing by tapping outside
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Enter Meeting URL'),
+          content: Form(
+            key: formKey,
+            child: TextFormField(
+              controller: meetingUrlController,
+              decoration: const InputDecoration(
+                hintText: 'https://example.com/meet',
+                labelText: 'Meeting URL',
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Meeting URL cannot be empty.';
+                }
+                if (!_isValidUrl(value)) {
+                  return 'Please enter a valid URL.';
+                }
+                return null;
+              },
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            ElevatedButton(
+              child: const Text('Next'),
+              onPressed: () {
+                if (formKey.currentState!.validate()) {
+                  Navigator.of(context).pop(); // Close URL dialog
+                  _showDateTimeDialog(
+                      meetingId, status, meetingUrlController.text);
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showDateTimeDialog(
+      String meetingId, String status, String meetingUrl) async {
+    // Fetch the current meeting details to pre-fill date/time
+    Appointment? currentMeeting;
+    try {
+      // Assuming FirestoreService has a method to get a single appointment
+      // If not, you might need to find it in the _meetings list or fetch it
+      currentMeeting = _meetings.firstWhere((m) => m.id == meetingId);
+    } catch (e) {
+      print("Could not find current meeting details: $e");
+      // Handle error - maybe show a default date/time or prevent proceeding
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not load current meeting time.')),
+      );
+      return;
+    }
+
+    DateTime selectedDate =
+        DateFormat('yyyy-MM-dd').parse(currentMeeting.date!);
+    TimeOfDay selectedTime = TimeOfDay(
+      hour: int.parse(currentMeeting.time!.split(':')[0]),
+      minute: int.parse(currentMeeting.time!.split(':')[1]),
+    );
+
+    // Use a StatefulWidget for the dialog content to manage state
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          // Use StatefulBuilder to update dialog content
+          builder: (context, setDialogState) {
             return AlertDialog(
-              title: const Text('Enter Meeting URL'),
-              content: TextField(
-                controller: meetingUrlController,
-                decoration: const InputDecoration(
-                  hintText: 'Meeting URL',
-                ),
+              title: const Text('Update Meeting Time (Optional)'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ListTile(
+                    title: Text(
+                        "Date: ${DateFormat('yyyy-MM-dd').format(selectedDate)}"),
+                    trailing: const Icon(Icons.calendar_today),
+                    onTap: () async {
+                      final DateTime? pickedDate = await showDatePicker(
+                        context: context,
+                        initialDate: selectedDate,
+                        firstDate: DateTime.now(),
+                        lastDate: DateTime(2101),
+                      );
+                      if (pickedDate != null && pickedDate != selectedDate) {
+                        setDialogState(() {
+                          // Update the dialog's state
+                          selectedDate = pickedDate;
+                        });
+                      }
+                    },
+                  ),
+                  ListTile(
+                    title: Text("Time: ${selectedTime.format(context)}"),
+                    trailing: const Icon(Icons.access_time),
+                    onTap: () async {
+                      final TimeOfDay? pickedTime = await showTimePicker(
+                        context: context,
+                        initialTime: selectedTime,
+                      );
+                      if (pickedTime != null && pickedTime != selectedTime) {
+                        setDialogState(() {
+                          // Update the dialog's state
+                          selectedTime = pickedTime;
+                        });
+                      }
+                    },
+                  ),
+                ],
               ),
               actions: <Widget>[
                 TextButton(
@@ -187,31 +335,30 @@ class _MeetingsTabState extends State<MeetingsTab> {
                   },
                 ),
                 ElevatedButton(
+                  // Changed from "Update" to "Accept" as this is the final step
                   child: const Text('Accept'),
                   onPressed: () async {
-                    String meetingUrl = meetingUrlController.text;
-                    if (meetingUrl.isNotEmpty) {
-                      try {
-                        await _firestoreService
-                            .updateMeetingStatusAndMeetingUrl(
-                                meetingId, status, meetingUrl);
-                        // Refresh meetings list after status update
-                        _loadMeetings();
-                        // ignore: use_build_context_synchronously
-                        Navigator.of(context).pop();
-                      } catch (e) {
-                        print('Error updating meeting status: $e');
-                        // Handle error, e.g., show a snackbar
-                      }
-                    } else {
-                      // Show error message if meeting URL is empty
-                      // ignore: use_build_context_synchronously
+                    final String formattedDate =
+                        DateFormat('yyyy-MM-dd').format(selectedDate);
+                    // Ensure time is formatted with leading zeros (HH:mm)
+                    final String formattedTime =
+                        '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}';
+
+                    try {
+                      // We need a method in FirestoreService to update date, time, status, and URL
+                      await _firestoreService.updateMeetingDetails(meetingId,
+                          status, meetingUrl, formattedDate, formattedTime);
+                      _loadMeetings(); // Refresh meetings list
+                      Navigator.of(context).pop(); // Close the date/time dialog
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Meeting URL cannot be empty.'),
-                          duration: Duration(seconds: 2),
-                        ),
+                        const SnackBar(content: Text('Meeting Accepted!')),
                       );
+                    } catch (e) {
+                      print('Error updating meeting details: $e');
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Error accepting meeting: $e')),
+                      );
+                      // Optionally keep the dialog open on error
                     }
                   },
                 ),
@@ -219,17 +366,8 @@ class _MeetingsTabState extends State<MeetingsTab> {
             );
           },
         );
-      } else {
-        try {
-          await _firestoreService.updateMeetingStatus(meetingId, status);
-          // Refresh meetings list after status update
-          _loadMeetings();
-        } catch (e) {
-          print('Error updating meeting status: $e');
-          // Handle error, e.g., show a snackbar
-        }
-      }
-    }
+      },
+    );
   }
 
   void _showReportDialog(BuildContext context, Appointment meeting) {
